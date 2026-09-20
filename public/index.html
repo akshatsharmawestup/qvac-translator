@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QVAC Translator — On-Device English to Hindi AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Mukta:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Top Navigation & Telemetry Bar -->
+    <header class="app-header">
+      <div class="brand-cluster">
+        <div class="brand-logo">
+          <span class="logo-glyph">अ</span>
+          <span class="logo-glow"></span>
+        </div>
+        <div class="brand-text">
+          <div class="brand-title-row">
+            <h1>QVAC Translator</h1>
+            <span class="version-tag">@qvac/sdk 0.19.1</span>
+          </div>
+          <p class="brand-subtitle">On-Device English ⇄ Hindi AI Studio • Tether QVAC Hackathon</p>
+        </div>
+      </div>
+
+      <div class="header-badges">
+        <div class="badge badge-privacy" title="No data leaves this machine">
+          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Zero Cloud • 100% On-Device</span>
+        </div>
+        <div class="badge badge-gpu" id="gpuBadge" title="Local Vulkan 1.4 GPU offload">
+          <svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 15h3M1 9h3M1 15h3"/></svg>
+          <span id="gpuText">Vulkan 1.4 GPU</span>
+        </div>
+        <div class="model-control-pill">
+          <span class="status-dot status-unloaded" id="modelStatusDot"></span>
+          <span class="status-label" id="modelStatusText">Checking model...</span>
+          <button class="btn-model-action" id="btnModelToggle">Load Model</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Dedicated Model Management Strip with Load Model Option -->
+    <section class="model-strip">
+      <div class="model-info-block">
+        <div class="model-select-wrapper">
+          <label class="model-select-label" for="modelSelect">MODEL OPTION</label>
+          <select class="model-select" id="modelSelect">
+            <option value="llama">Llama 3.2 1B Instruct (GGUF Q4_0) — On-Device NMT Engine</option>
+            <option value="marian">Marian Indic EN-HI 200M (Q4_0) — Compact NMT</option>
+          </select>
+        </div>
+        <div class="model-status-details">
+          <div class="model-name-title" id="modelTitle">Model: Llama 3.2 1B Instruct (GGUF Q4_0)</div>
+          <div class="model-status-text" id="statusText">Status: Checking model state...</div>
+        </div>
+        <div class="strip-progress-track" id="stripProgressTrack" style="display: none;">
+          <div class="strip-progress-fill" id="stripProgressFill" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <div class="model-strip-actions">
+        <button class="btn-load-primary" id="btnLoadModel">⚡ Load Model</button>
+        <button class="btn-unload-danger" id="btnUnloadModel">Release Memory</button>
+      </div>
+    </section>
+
+
+    <!-- Download / Loading Progress Banner -->
+    <div class="loading-banner" id="loadingBanner" style="display: none;">
+      <div class="loading-content">
+        <div class="spinner-amber"></div>
+        <div class="loading-info">
+          <div class="loading-title-row">
+            <span id="loadingTitle">Loading On-Device Model into Memory...</span>
+            <span id="loadingPercent">0%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-bar" id="progressBar" style="width: 0%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Workspace Container -->
+    <main class="translator-workspace">
+      <!-- Mode & Tools Ribbon -->
+      <div class="control-ribbon">
+        <div class="mode-tabs" role="tablist">
+          <button class="mode-tab active" data-mode="standard" role="tab">
+            <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span>Standard NMT</span>
+            <span class="tab-pill">Native SDK</span>
+          </button>
+          <button class="mode-tab" data-mode="formal" role="tab">
+            <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            <span>Formal / Shuddh</span>
+            <span class="tab-pill">शुद्ध हिन्दी</span>
+          </button>
+          <button class="mode-tab" data-mode="hinglish" role="tab">
+            <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>Conversational</span>
+            <span class="tab-pill">Hinglish</span>
+          </button>
+          <button class="mode-tab" data-mode="reverse" role="tab">
+            <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+            <span>Hindi ➔ English</span>
+            <span class="tab-pill">Reversal</span>
+          </button>
+        </div>
+
+        <div class="presets-row">
+          <span class="presets-label">Examples:</span>
+          <div class="presets-chips">
+            <button class="chip-btn" data-text="Welcome to our country! We are delighted to host you today.">👋 Welcome</button>
+            <button class="chip-btn" data-text="Artificial Intelligence running entirely on-device ensures total user privacy and zero data leakage.">🤖 On-Device AI</button>
+            <button class="chip-btn" data-text="Please submit the quarterly financial report by Friday afternoon for board review.">📊 Business</button>
+            <button class="chip-btn" data-text="Where can I find the nearest train station and what time does the express leave?">🚆 Travel</button>
+            <button class="chip-btn" data-text="Hard work and perseverance always yield fruitful results in life.">🌟 Wisdom</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dual-Pane Translation Grid -->
+      <div class="workbench-grid">
+        <!-- Source Pane (English) -->
+        <div class="pane-card pane-source">
+          <div class="pane-header">
+            <div class="pane-title-group">
+              <span class="lang-tag" id="sourceLangTag">English</span>
+              <span class="char-count" id="charCount">0 characters</span>
+            </div>
+            <div class="pane-actions">
+              <button class="action-btn" id="btnPaste" title="Paste from clipboard">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+                <span>Paste</span>
+              </button>
+              <button class="action-btn" id="btnClear" title="Clear text">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                <span>Clear</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="pane-body">
+            <textarea id="inputText" class="source-textarea" placeholder="Type or paste English text here to translate locally... (Press Ctrl + Enter to Translate)" spellcheck="false"></textarea>
+          </div>
+
+          <div class="pane-footer">
+            <div class="shortcut-tip">
+              <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to translate
+            </div>
+            <button class="btn-translate" id="btnTranslate">
+              <span class="btn-text">Translate Locally</span>
+              <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Swap Direction Button -->
+        <div class="swap-column">
+          <button class="btn-swap" id="btnSwap" title="Swap languages">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 8 16 13"/><line x1="21" y1="8" x2="9" y2="8"/><polyline points="8 21 3 16 8 11"/><line x1="3" y1="16" x2="15" y2="16"/></svg>
+          </button>
+        </div>
+
+        <!-- Target Pane (Hindi) -->
+        <div class="pane-card pane-target">
+          <div class="pane-header">
+            <div class="pane-title-group">
+              <span class="lang-tag lang-target-tag" id="targetLangTag">Hindi (हिन्दी)</span>
+              <span class="stream-indicator" id="streamIndicator" style="display: none;">
+                <span class="pulsing-circle"></span>
+                <span>Generating...</span>
+              </span>
+            </div>
+            <div class="pane-actions">
+              <button class="action-btn" id="btnTts" title="Listen with Text-to-Speech">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                <span>Listen</span>
+              </button>
+              <button class="action-btn" id="btnCopy" title="Copy translated text">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span id="copyLabel">Copy</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="pane-body output-body">
+            <div id="outputText" class="target-output" tabindex="0">
+              <span class="output-placeholder">Your on-device Hindi translation will stream here in real time...</span>
+            </div>
+          </div>
+
+          <div class="pane-footer target-footer">
+            <div class="metrics-cluster" id="metricsCluster">
+              <div class="metric-item">
+                <span class="metric-label">SPEED</span>
+                <span class="metric-val" id="metricSpeed">-- tok/s</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-label">LATENCY</span>
+                <span class="metric-val" id="metricLatency">-- ms</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-label">TOKENS</span>
+                <span class="metric-val" id="metricTokens">0</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-label">CLOUD CALLS</span>
+                <span class="metric-val metric-green">0 (Offline)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Hardware & Telemetry Drawer -->
+      <footer class="telemetry-footer">
+        <div class="telemetry-bar">
+          <div class="telemetry-cell">
+            <span class="t-label">RUNTIME:</span>
+            <span class="t-value" id="tRuntime">Node.js (Win32)</span>
+          </div>
+          <div class="telemetry-cell">
+            <span class="t-label">ACCELERATOR:</span>
+            <span class="t-value" id="tGpu">Vulkan 1.4 GPU</span>
+          </div>
+          <div class="telemetry-cell">
+            <span class="t-label">SYSTEM MEMORY:</span>
+            <span class="t-value" id="tMem">-- GB Free</span>
+          </div>
+          <div class="telemetry-cell">
+            <span class="t-label">ENGINE:</span>
+            <span class="t-value">Tether @qvac/sdk v0.19.1</span>
+          </div>
+          <div class="telemetry-cell">
+            <span class="t-label">STATUS:</span>
+            <span class="t-badge-verified">Verified On-Device</span>
+          </div>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

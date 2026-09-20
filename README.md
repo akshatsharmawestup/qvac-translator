@@ -65,23 +65,25 @@ Tested on an **NVIDIA GeForce RTX 4070 (Vulkan 1.4, 24 CPU threads, 32 GB RAM)**
 
 ---
 
-## ⚡ Quickstart Guide
+## 📦 SDK Version
+This project strictly runs on **@qvac/sdk version 0.19.1** (exceeding the `@qvac/sdk >= 0.19.0` requirement).
 
-### 1. Clone & Navigate
+---
+
+## ⚡ Install Steps & Run Steps
+
+### Install Steps
 ```bash
-git clone <YOUR_REPO_URL>
+git clone https://github.com/akshatsharmawestup/qvac-translator.git
 cd qvac-translator
-```
-
-### 2. Install Dependencies
-```bash
 npm install
 ```
 
-### 3. Start the Server
+### Run Steps
 ```bash
 npm start
 ```
+Then open your browser to **`http://localhost:3001`**.
 
 ### 4. Open in Browser
 Visit **`http://localhost:3001`** in your browser.

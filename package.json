@@ -1,0 +1,29 @@
+{
+  "name": "qvac-translator",
+  "version": "1.0.0",
+  "description": "100% on-device English-to-Hindi AI translation studio powered by @qvac/sdk",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node test-translate.js"
+  },
+  "keywords": [
+    "qvac",
+    "on-device-ai",
+    "translation",
+    "english-to-hindi",
+    "hindi-translator",
+    "local-ai",
+    "vulkan",
+    "devanagari"
+  ],
+  "author": "The QVAC Translator Contributors",
+  "license": "MIT",
+  "dependencies": {
+    "@qvac/sdk": "^0.19.1",
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  }
+}
